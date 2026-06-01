@@ -16,6 +16,7 @@ spec:
     spec:
       containers:
       - image: mouradlakhdhar/voting-app-vote:v1
+        imagePullPolicy: Always
         name: vote
         ports:
         - containerPort: 80
