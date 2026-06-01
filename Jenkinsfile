@@ -30,9 +30,9 @@ pipeline {
 
                     sh '''
                         echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
-
-                        docker push '"${REPO}"':'"${VERSION}"'
-                        docker push '"${REPO}"':latest
+                        sh 'echo $REPO:$VERSION'
+                        docker push $REPO:$VERSION
+                        docker push $REPO:latest
                     '''
                 }
             }
