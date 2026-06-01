@@ -2,7 +2,8 @@ pipeline {
     agent any
 
     environment {
-        IMAGE_NAME = "mouradlakhdhar/voting-app-vote:v2"
+        VERSION = "v${BUILD_NUMBER}"
+        REPO = "mouradlakhdhar/voting-app-vote"
     }
 
     stages {
@@ -10,23 +11,29 @@ pipeline {
         stage('Build vote image') {
             steps {
                 dir('vote') {
-                    sh 'docker build -t $IMAGE_NAME .'
+                    sh """
+                        docker build \
+                          -t ${REPO}:${VERSION} \
+                          -t ${REPO}:latest .
+                    """
                 }
             }
         }
 
         stage('Push image to Docker Hub') {
             steps {
-
                 withCredentials([usernamePassword(
                     credentialsId: 'dockerhub',
                     usernameVariable: 'DOCKER_USER',
                     passwordVariable: 'DOCKER_PASS'
                 )]) {
 
-                    sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
+                    sh '''
+                        echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
 
-                    sh 'docker push $IMAGE_NAME'
+                        docker push '"${REPO}"':'"${VERSION}"'
+                        docker push '"${REPO}"':latest
+                    '''
                 }
             }
         }
