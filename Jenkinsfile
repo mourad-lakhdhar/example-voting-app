@@ -40,6 +40,16 @@ pipeline {
             }
         }
 
+        stage('Setup SSH known_hosts') {
+            steps {
+                sh '''
+                    mkdir -p ~/.ssh
+                    ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts
+                    ssh-keyscan -t ed25519 github.com >> ~/.ssh/known_hosts
+                '''
+            }
+        }        
+
         stage('Update GitOps repository') {
             steps {
                 sshagent(['github-ssh']) {
