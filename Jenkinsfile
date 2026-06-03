@@ -52,9 +52,12 @@ pipeline {
                     sh """
                         rm -rf gitops
 
-                        git clone https://${GITHUB_USER}:${GITHUB_TOKEN}@github.com/mourad-lakhdhar/example-voting-app.git gitops
+                        git clone git@github.com:mourad-lakhdhar/example-voting-app.git gitops
 
                         cd gitops
+
+                        git config user.email "jenkins@local"
+                        git config user.name "jenkins"
 
                         sed -i 's|mouradlakhdhar/voting-app-vote:.*|mouradlakhdhar/voting-app-vote:${VERSION}|' k8s-specifications/vote-deployment.yaml
 
