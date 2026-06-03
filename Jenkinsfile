@@ -42,13 +42,7 @@ pipeline {
 
         stage('Update GitOps repository') {
             steps {
-                withCredentials([
-                    usernamePassword(
-                        credentialsId: 'github-token',
-                        usernameVariable: 'GITHUB_USER',
-                        passwordVariable: 'GITHUB_TOKEN'
-                    )
-                ]) {
+                sshagent(['github-ssh']) {
                     sh """
                         rm -rf gitops
 
@@ -62,13 +56,12 @@ pipeline {
                         sed -i 's|mouradlakhdhar/voting-app-vote:.*|mouradlakhdhar/voting-app-vote:${VERSION}|' k8s-specifications/vote-deployment.yaml
 
                         git add k8s-specifications/vote-deployment.yaml
-
                         git commit -m "Update vote image to ${VERSION}" || true
 
                         git push origin main
                     """
                 }
             }
-        }    
+        }
     }
 }
