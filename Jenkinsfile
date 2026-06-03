@@ -4,6 +4,8 @@ pipeline {
     environment {
         VERSION = "v${BUILD_NUMBER}"
         REPO = "mouradlakhdhar/voting-app-vote"
+        GITOPS_REPO = "https://github.com/mourad-lakhdhar/example-voting-app.git"
+
     }
 
     stages {
@@ -37,5 +39,33 @@ pipeline {
                 }
             }
         }
+
+        stage('Update GitOps repository') {
+            steps {
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'github-token',
+                        usernameVariable: 'GITHUB_USER',
+                        passwordVariable: 'GITHUB_TOKEN'
+                    )
+                ]) {
+                    sh """
+                        rm -rf gitops
+
+                        git clone https://${GITHUB_USER}:${GITHUB_TOKEN}@github.com/mourad-lakhdhar/example-voting-app.git gitops
+
+                        cd gitops
+
+                        sed -i 's|mouradlakhdhar/voting-app-vote:.*|mouradlakhdhar/voting-app-vote:${VERSION}|' k8s-specifications/vote-deployment.yaml
+
+                        git add k8s-specifications/vote-deployment.yaml
+
+                        git commit -m "Update vote image to ${VERSION}" || true
+
+                        git push origin main
+                    """
+                }
+            }
+        }    
     }
 }
