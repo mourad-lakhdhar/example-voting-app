@@ -15,7 +15,7 @@ spec:
         app: vote
     spec:
       containers:
-      - image: mouradlakhdhar/voting-app-vote:latest
+      - image: mouradlakhdhar/voting-app-vote:v20
         name: vote
         ports:
         - containerPort: 80
