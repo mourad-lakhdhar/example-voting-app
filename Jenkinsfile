@@ -51,18 +51,12 @@ pipeline {
         }        
 
         stage('Update GitOps repository') {
-                when {
-                   not {
-                        changelog '.*\\[skip ci\\].*'
-                    }
-                }
-
             steps {
                 sshagent(['github-ssh']) {
                     sh """
                         rm -rf gitops
 
-                        git clone git@github.com:mourad-lakhdhar/example-voting-app.git gitops
+                        git clone git@github.com:mourad-lakhdhar/example-voting-app-gitops.git gitops
 
                         cd gitops
 
@@ -72,7 +66,7 @@ pipeline {
                         sed -i 's|mouradlakhdhar/voting-app-vote:.*|mouradlakhdhar/voting-app-vote:${VERSION}|' k8s-specifications/vote-deployment.yaml
 
                         git add k8s-specifications/vote-deployment.yaml
-                        git commit -m "[skip ci] Update vote image to ${VERSION}" || true
+                        git commit -m "Update vote image to ${VERSION}" || true
 
                         git push origin main
                     """
