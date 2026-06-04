@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, make_response, g
 from redis import Redis
+from prometheus_client import Counter, generate_latest, CONTENT_TYPE_LATEST
 import os
 import socket
 import random
@@ -16,12 +17,19 @@ gunicorn_error_logger = logging.getLogger('gunicorn.error')
 app.logger.handlers.extend(gunicorn_error_logger.handlers)
 app.logger.setLevel(logging.INFO)
 
+# Prometheus metrics
+vote_counter = Counter(
+    'vote_total',
+    'Total number of votes',
+    ['option']
+)
+
 def get_redis():
     if not hasattr(g, 'redis'):
         g.redis = Redis(host="redis", db=0, socket_timeout=5)
     return g.redis
 
-@app.route("/", methods=['POST','GET'])
+@app.route("/", methods=['POST', 'GET'])
 def hello():
     voter_id = request.cookies.get('voter_id')
     if not voter_id:
@@ -32,6 +40,10 @@ def hello():
     if request.method == 'POST':
         redis = get_redis()
         vote = request.form['vote']
+
+        # Increment Prometheus metric
+        vote_counter.labels(option=vote).inc()
+
         app.logger.info('Received vote for %s', vote)
         data = json.dumps({'voter_id': voter_id, 'vote': vote})
         redis.rpush('votes', data)
@@ -46,6 +58,11 @@ def hello():
     resp.set_cookie('voter_id', voter_id)
     return resp
 
+@app.route('/metrics')
+def metrics():
+    return generate_latest(), 200, {
+        'Content-Type': CONTENT_TYPE_LATEST
+    }
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=80, debug=True, threaded=True)
